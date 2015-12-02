@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,27 +34,29 @@ namespace MaxEntMallet
             Dictionary<String, int> WordCount = new Dictionary<string, int>();
             Dictionary<String, int> featuresCount = new Dictionary<string, int>();
             List<List<string>> wordFeatures = new List<List<string>>();
-            
             //read the input file and store it in a DS to process later based on word frequency
             ReadInputAndGetWC(trainFile,InputLines, WordCount);
             //process training data
             ProcessData(InputLines,featuresCount,wordFeatures,true,rareThreshold, WordCount);
 
             var featuresCountSorted = featuresCount.OrderByDescending(x => x.Value);
-            StreamWriter sw = new StreamWriter(outputDir+@"\int_feats");
-            StreamWriter sw1 = new StreamWriter(outputDir + @"\kept_feats");
-            StreamWriter sw2 = new StreamWriter(outputDir + @"\train_voc");
+            StreamWriter sw = new StreamWriter(System.IO.Path.Combine(outputDir,"int_feats"));
+            StreamWriter sw1 = new StreamWriter(System.IO.Path.Combine(outputDir ,"kept_feats"));
+            StreamWriter sw2 = new StreamWriter(System.IO.Path.Combine(outputDir ,"train_voc"));
+            int keptCount = 0;
             foreach (var item in featuresCountSorted)
             {
                 if ( item.Value >= featThreshold)
                 {
                     sw1.WriteLine(item.Key + " " + item.Value);
-                    
+                    keptCount++;
                 }
                 sw.WriteLine(item.Key + " " + item.Value);
             }
             sw.Close();
             sw1.Close();
+            Console.WriteLine("KeptCount: " + keptCount);
+            Console.WriteLine("InitCount: " + featuresCount.Count);
             //write vocabulary file
             //TODO:Change to "comma" when features are created or change the vocab file
             foreach (var item in WordCount.OrderByDescending(x=>x.Value))
@@ -62,7 +65,7 @@ namespace MaxEntMallet
             }
             sw2.Close();
             //Write down the train file
-            WriteFinalTrainTest(outputDir + @"\final_train.vectors.txt", wordFeatures,featThreshold,featuresCount);
+            WriteFinalTrainTest(System.IO.Path.Combine(outputDir ,"final_train.vectors.txt"), wordFeatures,featThreshold,featuresCount);
            
             
             string line;
@@ -83,10 +86,8 @@ namespace MaxEntMallet
             }
             //Process Test File to generate vectors
             ProcessData(InputLinesTest, featuresCount, wordFeaturesTest, false, rareThreshold, WordCount);
-            WriteFinalTrainTest(outputDir + @"\final_test.vectors.txt", wordFeaturesTest, featThreshold, featuresCount);
-            Console.WriteLine("finished processing training");
+            WriteFinalTrainTest(System.IO.Path.Combine(outputDir ,"final_test.vectors.txt"), wordFeaturesTest, featThreshold, featuresCount);
             Console.ReadLine();
-            
 
 
         }
